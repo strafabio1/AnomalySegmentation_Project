@@ -6,11 +6,10 @@ trainer:
     init_args:
       resume: allow
       project: "eomt"
-      name: "base_run"
+      name: "finetune_cityscapes_semantic_eomt_base_640"
 model:
   class_path: training.mask_classification_semantic.MaskClassificationSemantic
   init_args:
-    img_size: [640, 640]
     attn_mask_annealing_enabled: False
     network:
       class_path: models.eomt.EoMT
@@ -22,9 +21,7 @@ model:
           class_path: models.vit.ViT
           init_args:
             backbone_name: vit_base_patch14_reg4_dinov2
-            img_size: [640, 640]
-            patch_size: 16 
 data:
   class_path: datasets.cityscapes_semantic.CityscapesSemantic
   init_args:
-    img_size: [640, 640]
+    img_size:  [640, 640]
