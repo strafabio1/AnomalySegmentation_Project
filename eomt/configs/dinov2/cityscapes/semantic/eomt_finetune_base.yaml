@@ -1,0 +1,30 @@
+trainer:
+  max_epochs: 15
+  precision: "16-mixed"
+  logger:
+    class_path: lightning.pytorch.loggers.wandb.WandbLogger
+    init_args:
+      resume: allow
+      project: "eomt"
+      name: "base_run"
+model:
+  class_path: training.mask_classification_semantic.MaskClassificationSemantic
+  init_args:
+    img_size: [640, 640]
+    attn_mask_annealing_enabled: False
+    network:
+      class_path: models.eomt.EoMT
+      init_args:
+        num_q: 200 
+        num_blocks: 3
+        unfreeze_last_n_blocks: 0
+        encoder:
+          class_path: models.vit.ViT
+          init_args:
+            backbone_name: vit_base_patch14_reg4_dinov2
+            img_size: [640, 640]
+            patch_size: 16 
+data:
+  class_path: datasets.cityscapes_semantic.CityscapesSemantic
+  init_args:
+    img_size: [640, 640]

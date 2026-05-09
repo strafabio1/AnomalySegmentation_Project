@@ -23,9 +23,30 @@ class EoMT(nn.Module):
         num_q,
         num_blocks=4,
         masked_attn_enabled=True,
+        unfreeze_last_n_blocks=0
     ):
         super().__init__()
         self.encoder = encoder
+
+        #Freeze the entire encoder by default.
+        for param in self.encoder.parameters():
+            param.requires_grad = False
+            
+        #Gradual Unfreezing: Enable gradients for the last N transformer blocks.
+        if unfreeze_last_n_blocks > 0:
+            blocks = self.encoder.backbone.blocks
+            # Ensure start index doesn't go out of bounds
+            start_idx = max(0, len(blocks) - unfreeze_last_n_blocks)
+            
+            for i in range(start_idx, len(blocks)):
+                for param in blocks[i].parameters():
+                    param.requires_grad = True
+            
+            if hasattr(self.encoder.backbone, 'norm'):
+                for param in self.encoder.backbone.norm.parameters():
+                    param.requires_grad = True
+            
+
         self.num_q = num_q
         self.num_blocks = num_blocks
         self.masked_attn_enabled = masked_attn_enabled
