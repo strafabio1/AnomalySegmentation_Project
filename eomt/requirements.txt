@@ -1,12 +1,12 @@
 gitignore_parser==0.1.13
-jsonargparse[signatures]==4.48.0
+jsonargparse[signatures]==4.38
 matplotlib==3.10.1
 timm==1.0.15
 wandb==0.26.1
 transformers==4.56.1
 scipy==1.15.2
 torch==2.10.0
-torchvision==0.25.0
+torchvision==0.22.0
 ipykernel==6.17.1
 fvcore==0.1.5.post20221221
 torchmetrics==1.7.1
