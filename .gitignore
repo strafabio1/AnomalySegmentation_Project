@@ -1,8 +1,7 @@
-# Escludi tutti i file compressi (dataset)
 *.zip
 *.tar
 *.gz
 
-# Escludi le cartelle di dati pesanti
 CityScapes/
 data/
+*.ini
