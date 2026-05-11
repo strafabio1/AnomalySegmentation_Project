@@ -5,3 +5,6 @@
 CityScapes/
 data/
 *.ini
+
+.DS_Store
+eomt/mapping.py
