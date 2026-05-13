@@ -1,5 +1,5 @@
 trainer:
-  max_epochs: 15
+  max_epochs: 20
   precision: "16-mixed"
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
@@ -7,6 +7,14 @@ trainer:
       resume: allow
       project: "eomt"
       name: "finetune_cityscapes_semantic_eomt_base_640"
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+      init_args:
+        monitor: "metrics/val_iou_all" 
+        mode: "max"        
+        save_top_k: 1      
+        save_last: true
+        filename: "best"
 model:
   class_path: training.mask_classification_semantic.MaskClassificationSemantic
   init_args:
@@ -24,4 +32,4 @@ model:
 data:
   class_path: datasets.cityscapes_semantic.CityscapesSemantic
   init_args:
-    img_size:  [640, 640]
+    img_size: [640, 640]
