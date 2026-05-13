@@ -5,6 +5,8 @@
 CityScapes/
 data/
 *.ini
+Anomaly_Validation_Datasets/
 
 .DS_Store
 eomt/mapping.py
+*.pyc

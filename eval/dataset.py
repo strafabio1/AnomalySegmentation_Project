@@ -5,6 +5,7 @@
 
 import numpy as np
 import os
+import torch
 
 from PIL import Image
 
@@ -19,7 +20,7 @@ def is_image(filename):
     return any(filename.endswith(ext) for ext in EXTENSIONS)
 
 def is_label(filename):
-    return filename.endswith("_labelTrainIds.png")
+    return filename.endswith("_labelIds.png")
 
 def image_path(root, basename, extension):
     return os.path.join(root, f'{basename}{extension}')
@@ -55,7 +56,6 @@ class VOC12(Dataset):
             image = self.input_transform(image)
         if self.target_transform is not None:
             label = self.target_transform(label)
-
         return image, label
 
     def __len__(self):
@@ -93,7 +93,20 @@ class cityscapes(Dataset):
             image = self.input_transform(image)
         if self.target_transform is not None:
             label = self.target_transform(label)
+            
+        mapping = {
+            7: 0, 8: 1, 11: 2, 12: 3, 13: 4, 17: 5, 19: 6, 20: 7, 
+            21: 8, 22: 9, 23: 10, 24: 11, 25: 12, 26: 13, 27: 14, 
+            28: 15, 31: 16, 32: 17, 33: 18
+        }
 
+        label_np = np.array(label)
+        new_label = np.full(label_np.shape, 19, dtype=np.uint8)
+        for k, v in mapping.items():
+            new_label[label_np == k] = v
+            
+        label = torch.from_numpy(new_label).long()
+        
         return image, label, filename, filenameGt
 
     def __len__(self):
