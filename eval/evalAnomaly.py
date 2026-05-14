@@ -13,6 +13,7 @@ from ood_metrics import fpr_at_95_tpr, calc_metrics
 from sklearn.metrics import roc_auc_score, roc_curve, auc, precision_recall_curve, average_precision_score
 from torchvision.transforms import Compose, Resize, ToTensor, Normalize
 import torch.nn.functional as F
+from post_hoc import get_msp_score, get_max_logit_score, get_max_entropy_score, get_rba_score
 
 seed = 42
 
@@ -106,17 +107,11 @@ def main():
         images = input_transform((Image.open(path).convert('RGB'))).unsqueeze(0).float().cuda()
         with torch.no_grad():
             result = model(images)
-            
-        logits = result.squeeze(0)
-        logits = logits / args.temperature
-
-        res_maxlogit = 1.0 - torch.max(logits, dim=0)[0].cpu().numpy()
         
-        probs = F.softmax(logits, dim=0)
-        res_msp = 1.0 - torch.max(probs, dim=0)[0].cpu().numpy()
         
-        log_probs = F.log_softmax(logits, dim=0)
-        res_maxentropy = -torch.sum(probs * log_probs, dim=0).cpu().numpy()
+        res_maxlogit = get_max_logit_score(result, temperature=args.temperature)[0].cpu().numpy()
+        res_msp = get_msp_score(result, temperature=args.temperature)[0].cpu().numpy()
+        res_maxentropy = get_max_entropy_score(result, temperature=args.temperature)[0].cpu().numpy()
                        
         pathGT = path.replace("images", "labels_masks")                
         if "RoadObsticle21" in pathGT:
