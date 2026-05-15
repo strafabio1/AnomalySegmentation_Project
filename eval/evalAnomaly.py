@@ -1,118 +1,91 @@
-# Copyright (c) OpenMMLab. All rights reserved.
 import os
-import cv2
 import glob
 import torch
-import random
-from PIL import Image
 import numpy as np
-from erfnet import ERFNet
-import os.path as osp
+from PIL import Image
 from argparse import ArgumentParser
-from ood_metrics import fpr_at_95_tpr, calc_metrics
-from sklearn.metrics import roc_auc_score, roc_curve, auc, precision_recall_curve, average_precision_score
-from torchvision.transforms import Compose, Resize, ToTensor, Normalize
+from torchvision.transforms import Compose, Resize, ToTensor
 import torch.nn.functional as F
-from post_hoc import get_msp_score, get_max_logit_score, get_max_entropy_score, get_rba_score
 
-seed = 42
-
-# general reproducibility
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
-
-NUM_CHANNELS = 3
-NUM_CLASSES = 20
-# gpu training specific
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = True
-
-input_transform = Compose(
-    [
-        Resize((512, 1024), Image.BILINEAR),
-        ToTensor(),
-        # Normalize([.485, .456, .406], [.229, .224, .225]),
-    ]
-)
-
-target_transform = Compose(
-    [
-        Resize((512, 1024), Image.NEAREST),
-    ]
-)
+from ood_metrics import calc_metrics
+from post_hoc import get_msp_score, get_max_logit_score, get_max_entropy_score, get_rba_score, get_eomt_msp_score, get_eomt_max_logit_score, get_eomt_max_entropy_score
+from model_builder import load_erfnet, load_eomt
 
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument(
-        "--input",
-        default="/home/shyam/Mask2Former/unk-eval/RoadObsticle21/images/*.webp",
-        nargs="+",
-        help="A list of space separated input images; "
-        "or a single glob pattern such as 'directory/*.jpg'",
-    )  
-    parser.add_argument('--loadDir',default="../trained_models/")
-    parser.add_argument('--loadWeights', default="erfnet_pretrained.pth")
-    parser.add_argument('--loadModel', default="erfnet.py")
-    parser.add_argument('--subset', default="val")  #can be val or train (must have labels)
-    parser.add_argument('--datadir', default="/home/shyam/ViT-Adapter/segmentation/data/cityscapes/")
-    parser.add_argument('--num-workers', type=int, default=4)
-    parser.add_argument('--batch-size', type=int, default=1)
-    parser.add_argument('--cpu', action='store_true')
+    parser.add_argument("--input", default="path/to/images/*.webp", nargs="+")
+    parser.add_argument('--model_type', required=True, choices=['erfnet', 'eomt'])
+    parser.add_argument('--weights', required=True)
+    parser.add_argument('--config', default="")
     parser.add_argument('--temperature', type=float, default=1.0)
     args = parser.parse_args()
-    
+  
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    print(f"\nInitializing {args.model_type.upper()} model...")
+    if args.model_type == 'erfnet':
+        model = load_erfnet(args.weights).to(device)
+    elif args.model_type == 'eomt':
+        assert args.config, "EoMT requires a --config (.yaml) file"
+        model = load_eomt(args.config, args.weights, device).to(device)
+    model.eval()
+
+    if args.model_type == 'eomt':
+        if 'cityscapes' in args.weights.lower():
+            eval_size = (1024, 1024)
+        else:
+            eval_size = (640, 640)
+    else:
+        eval_size = (512, 1024)
+
+    input_transform = Compose([Resize(eval_size, Image.BILINEAR), ToTensor()])
+    target_transform = Compose([Resize(eval_size, Image.NEAREST)])
+
     anomaly_scores_dict = {
+        'MSP': [],
         'MaxLogit': [],
-        'MSP': [],  
-        'MaxEntropy': []   
-    }
+        'MaxEntropy': []
+        }
+    if args.model_type == 'eomt':
+        anomaly_scores_dict['RbA'] = []
+    
     ood_gts_list = []
 
-    if not os.path.exists('results.txt'):
-        open('results.txt', 'w').close()
-    file = open('results.txt', 'a')
-
-    modelpath = args.loadDir + args.loadModel
-    weightspath = args.loadDir + args.loadWeights
-
-    print ("Loading model: " + modelpath)
-    print ("Loading weights: " + weightspath)
-
-    model = ERFNet(NUM_CLASSES)
-
-    if (not args.cpu):
-        model = torch.nn.DataParallel(model).cuda()
-
-    def load_my_state_dict(model, state_dict):  #custom function to load model when not all dict elements
-        own_state = model.state_dict()
-        for name, param in state_dict.items():
-            if name not in own_state:
-                if name.startswith("module."):
-                    own_state[name.split("module.")[-1]].copy_(param)
-                else:
-                    print(name, " not loaded")
-                    continue
-            else:
-                own_state[name].copy_(param)
-        return model
-
-    model = load_my_state_dict(model, torch.load(weightspath, map_location=lambda storage, loc: storage))
-    print ("Model and weights LOADED successfully")
-    model.eval()
+    print("\nStarting evaluation loop...")
     
     for path in glob.glob(os.path.expanduser(str(args.input[0]))):
-        print(path)
-        images = input_transform((Image.open(path).convert('RGB'))).unsqueeze(0).float().cuda()
+        img = Image.open(path).convert('RGB')
+        images = input_transform(img).unsqueeze(0).float().to(device)
+
         with torch.no_grad():
-            result = model(images)
-        
-        
-        res_maxlogit = get_max_logit_score(result, temperature=args.temperature)[0].cpu().numpy()
-        res_msp = get_msp_score(result, temperature=args.temperature)[0].cpu().numpy()
-        res_maxentropy = get_max_entropy_score(result, temperature=args.temperature)[0].cpu().numpy()
-                       
+            if args.model_type == 'erfnet':
+                logits = model(images)
+                res_maxlogit = get_max_logit_score(logits, temperature=args.temperature)[0].cpu().numpy()
+                res_msp = get_msp_score(logits, temperature=args.temperature)[0].cpu().numpy()
+                res_maxentropy = get_max_entropy_score(logits, temperature=args.temperature)[0].cpu().numpy()
+                
+            elif args.model_type == 'eomt':
+                outputs = model(images)
+                p_logits = outputs[1][-1]
+                p_masks = outputs[0][-1]
+                
+                res_maxlogit = get_eomt_max_logit_score(p_logits, p_masks, temperature=args.temperature)
+                res_msp = get_eomt_msp_score(p_logits, p_masks, temperature=args.temperature)
+                res_maxentropy = get_eomt_max_entropy_score(p_logits, p_masks, temperature=args.temperature)
+                res_rba = get_rba_score(p_logits, p_masks)
+                
+                def upscale_score(s_tensor):
+                    s_tensor = s_tensor.unsqueeze(0) 
+                    s_upscaled = F.interpolate(s_tensor, size=eval_size, mode='bilinear', align_corners=False)
+                    return s_upscaled.squeeze().cpu().numpy()
+
+                res_maxlogit = upscale_score(res_maxlogit)
+                res_msp = upscale_score(res_msp)
+                res_maxentropy = upscale_score(res_maxentropy)
+                res_rba = upscale_score(res_rba)
+                                
+
         pathGT = path.replace("images", "labels_masks")                
         if "RoadObsticle21" in pathGT:
            pathGT = pathGT.replace("webp", "png")
@@ -120,7 +93,7 @@ def main():
            pathGT = pathGT.replace("jpg", "png")                
         if "RoadAnomaly" in pathGT:
            pathGT = pathGT.replace("jpg", "png")  
-
+        
         mask = Image.open(pathGT)
         mask = target_transform(mask)
         ood_gts = np.array(mask)
@@ -131,7 +104,6 @@ def main():
             ood_gts = np.where((ood_gts==0), 255, ood_gts)
             ood_gts = np.where((ood_gts==1), 0, ood_gts)
             ood_gts = np.where((ood_gts>1)&(ood_gts<201), 1, ood_gts)
-
         if "Streethazard" in pathGT:
             ood_gts = np.where((ood_gts==14), 255, ood_gts)
             ood_gts = np.where((ood_gts<20), 0, ood_gts)
@@ -144,26 +116,21 @@ def main():
             anomaly_scores_dict['MaxLogit'].append(res_maxlogit)
             anomaly_scores_dict['MSP'].append(res_msp)
             anomaly_scores_dict['MaxEntropy'].append(res_maxentropy)
+            if args.model_type == 'eomt':
+                anomaly_scores_dict['RbA'].append(res_rba)
             
-        del result, res_maxlogit, res_msp, res_maxentropy, ood_gts, mask
         torch.cuda.empty_cache()
 
-    file.write( "\n")
-    
+    if len(ood_gts_list) == 0:
+        print("Error: No valid evaluation images found containing anomalies.")
+        return
+
     ood_gts = np.array(ood_gts_list)
-
+    dataset_name = os.path.basename(os.path.dirname(os.path.dirname(str(args.input[0]))))
+    print(f"--- {args.model_type.upper()} EVALUATION RESULTS on {dataset_name} (Temperature: {args.temperature}) ---")
     for method_name, scores_list in anomaly_scores_dict.items():
-        anomaly_scores = np.array(scores_list)
-
-        prc_auc, fpr = calc_metrics(ood_gts, anomaly_scores)
-        
-        print(f'--- {method_name} ---') 
-        print(f'AUPRC score: {prc_auc*100.0:.2f}') 
-        print(f'FPR@TPR95: {fpr*100.0:.2f}\n')
-
-        file.write(f'{method_name} -> AUPRC: {prc_auc*100.0:.2f} | FPR@TPR95: {fpr*100.0:.2f}\n')  #modifica
-
-    file.close()
+        prc_auc, fpr = calc_metrics(ood_gts, np.array(scores_list))
+        print(f"{method_name:<12} -> AUPRC: {prc_auc*100.0:.2f} | FPR@TPR95: {fpr*100.0:.2f}")
 
 if __name__ == '__main__':
     main()
