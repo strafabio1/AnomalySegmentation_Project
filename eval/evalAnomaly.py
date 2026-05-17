@@ -2,9 +2,10 @@ import os
 import glob
 import torch
 import numpy as np
+import cv2
 from PIL import Image
 from argparse import ArgumentParser
-from torchvision.transforms import Compose, Resize, ToTensor
+from torchvision.transforms import Compose, Resize, ToTensor, Normalize
 import torch.nn.functional as F
 
 from ood_metrics import calc_metrics
@@ -39,7 +40,10 @@ def main():
     else:
         eval_size = (512, 1024)
 
-    input_transform = Compose([Resize(eval_size, Image.BILINEAR), ToTensor()])
+    erfnet_transform = Compose([
+        Resize(eval_size, Image.BILINEAR), 
+        ToTensor()    
+        ])
     target_transform = Compose([Resize(eval_size, Image.NEAREST)])
 
     anomaly_scores_dict = {
@@ -55,25 +59,29 @@ def main():
     print("\nStarting evaluation loop...")
     
     for path in glob.glob(os.path.expanduser(str(args.input[0]))):
-        img = Image.open(path).convert('RGB')
-        images = input_transform(img).unsqueeze(0).float().to(device)
-
+        
         with torch.no_grad():
             if args.model_type == 'erfnet':
+                img = Image.open(path).convert('RGB')
+                images = erfnet_transform(img).unsqueeze(0).float().to(device)
+                
                 logits = model(images)
                 res_maxlogit = get_max_logit_score(logits, temperature=args.temperature)[0].cpu().numpy()
                 res_msp = get_msp_score(logits, temperature=args.temperature)[0].cpu().numpy()
                 res_maxentropy = get_max_entropy_score(logits, temperature=args.temperature)[0].cpu().numpy()
                 
             elif args.model_type == 'eomt':
+                img_bgr = cv2.imread(path)
+                img_resized = cv2.resize(img_bgr, (eval_size[1], eval_size[0]), interpolation=cv2.INTER_LINEAR)
+                images = torch.from_numpy(img_resized).permute(2, 0, 1).unsqueeze(0).float().to(device)
+                
                 outputs = model(images)
                 p_logits = outputs[1][-1]
                 p_masks = outputs[0][-1]
-                
                 res_maxlogit = get_eomt_max_logit_score(p_logits, p_masks, temperature=args.temperature)
                 res_msp = get_eomt_msp_score(p_logits, p_masks, temperature=args.temperature)
                 res_maxentropy = get_eomt_max_entropy_score(p_logits, p_masks, temperature=args.temperature)
-                res_rba = get_rba_score(p_logits, p_masks)
+                res_rba = get_rba_score(p_logits, p_masks, temperature=args.temperature)
                 
                 def upscale_score(s_tensor):
                     s_tensor = s_tensor.unsqueeze(0) 
