@@ -10,13 +10,11 @@ def get_msp_score(logits, temperature=1.0):
     max_prob, _ = torch.max(probs, dim=1)
     return 1.0 - max_prob
 
-def get_max_logit_score(logits, temperature=1.0):
-    logits = logits / temperature
+def get_max_logit_score(logits):
     max_logit, _ = torch.max(logits, dim=1)
     return  -max_logit
 
-def get_max_entropy_score(logits, temperature=1.0):
-    logits = logits / temperature
+def get_max_entropy_score(logits):
     probs = F.softmax(logits, dim=1)
     log_probs = F.log_softmax(logits, dim=1)
     entropy = -torch.sum(probs * log_probs, dim=1)
@@ -39,19 +37,19 @@ def get_eomt_msp_score(pred_logits, pred_masks, temperature=1.0):
     max_prob, _ = torch.max(probs, dim=1)
     return 1.0 - max_prob
 
-def get_eomt_max_logit_score(pred_logits, pred_masks, temperature=1.0):
-    known_scores = get_eomt_known_class_scores(pred_logits, pred_masks, temperature)
+def get_eomt_max_logit_score(pred_logits, pred_masks):
+    known_scores = get_eomt_known_class_scores(pred_logits, pred_masks)
     max_score, _ = torch.max(known_scores, dim=1)
     return -max_score
 
-def get_eomt_max_entropy_score(pred_logits, pred_masks, temperature=1.0):
-    known_scores = get_eomt_known_class_scores(pred_logits, pred_masks, temperature)
+def get_eomt_max_entropy_score(pred_logits, pred_masks):
+    known_scores = get_eomt_known_class_scores(pred_logits, pred_masks)
     probs = F.softmax(known_scores, dim=1)
     log_probs = F.log_softmax(known_scores, dim=1)
     entropy = -torch.sum(probs * log_probs, dim=1)
     return entropy
 
-def get_rba_score(pred_logits, pred_masks, temperature=1.0):
-    known_scores = get_eomt_known_class_scores(pred_logits, pred_masks, temperature)
+def get_rba_score(pred_logits, pred_masks):
+    known_scores = get_eomt_known_class_scores(pred_logits, pred_masks)
     rba_score = -torch.sum(torch.tanh(known_scores), dim=1)
     return rba_score
