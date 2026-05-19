@@ -13,8 +13,7 @@ from argparse import ArgumentParser
 
 from torch.autograd import Variable
 
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 
 from erfnet.model.erfnet_nobn import ERFNet
 from erfnet.utils.transform import Relabel, ToLabel, Colorize
