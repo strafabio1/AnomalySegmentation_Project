@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import roc_curve, average_precision_score
+from sklearn.metrics import roc_curve, average_precision_score, roc_auc_score
 
 def fpr_at_95_tpr(val_out, val_label):
     """
@@ -13,7 +13,7 @@ def fpr_at_95_tpr(val_out, val_label):
 def calc_metrics(ood_gts, anomaly_scores):
     """
     Separates pixels into anomalies (1) and normal/in-distribution (0), 
-    concatenates the results, and computes AUPRC and FPR95.
+    concatenates the results, and computes AUPRC, FPR95, and AUROC.
     """
     ood_mask = (ood_gts == 1)
     ind_mask = (ood_gts == 0)
@@ -29,5 +29,6 @@ def calc_metrics(ood_gts, anomaly_scores):
 
     prc_auc = average_precision_score(val_label, val_out)
     fpr = fpr_at_95_tpr(val_out, val_label)
+    auroc = roc_auc_score(val_label, val_out)
     
-    return prc_auc, fpr
+    return prc_auc, fpr, auroc

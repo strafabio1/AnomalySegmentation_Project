@@ -4,9 +4,15 @@ This repository contains the codebase for the Anomaly Segmentation Project, whic
 
 It provides extended scripts and modules to efficiently fine-tune, train, and evaluate EoMT models on the Cityscapes dataset, alongside specialized tools for rigorous Anomaly Detection benchmarking.
 
-You can download our custom pre-trained models on Cityscapes at this [link](https://drive.google.com/drive/folders/1q2vHUzora2nP52fP50zmoQAykWuwoGav?usp=drive_link).
+You can find a EoMT model trained on Cityscapes dataset with the [config file](eomt/configs/dinov2/cityscapes/semantic) at this [link](https://drive.google.com/drive/folders/1q2vHUzora2nP52fP50zmoQAykWuwoGav?usp=drive_link).
 
 ## Requirements Installation
+
+Ensure you have installed the project's main dependencies before running the scripts in this module. You can install them from the repository root:
+
+```bash
+pip install -r requirements.txt
+```
 
 If you don't have Conda installed, install Miniconda and restart your shell:
 

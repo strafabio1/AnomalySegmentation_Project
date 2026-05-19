@@ -13,8 +13,11 @@ from argparse import ArgumentParser
 
 from torch.autograd import Variable
 
-from erfnet_nobn import ERFNet
-from transform import Relabel, ToLabel, Colorize
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+from erfnet.model.erfnet_nobn import ERFNet
+from erfnet.utils.transform import Relabel, ToLabel, Colorize
 
 import torch.backends.cudnn as cudnn
 cudnn.benchmark = True

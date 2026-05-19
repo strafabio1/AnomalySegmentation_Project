@@ -100,9 +100,9 @@ def main():
                 logits = model(images)
                 
                 for t in args.temperature:
-                    res_maxlogit = get_max_logit_score(logits)[0].cpu().numpy()
+                    res_maxlogit = get_max_logit_score(logits, temperature=t)[0].cpu().numpy()
                     res_msp = get_msp_score(logits, temperature=t)[0].cpu().numpy()
-                    res_maxentropy = get_max_entropy_score(logits)[0].cpu().numpy()
+                    res_maxentropy = get_max_entropy_score(logits, temperature=t)[0].cpu().numpy()
                     
                     anomaly_scores_dict[t]['MaxLogit'].append(res_maxlogit)
                     anomaly_scores_dict[t]['MSP'].append(res_msp)
@@ -123,10 +123,10 @@ def main():
                     return s_upscaled.squeeze().cpu().numpy()
 
                 for t in args.temperature:
-                    res_maxlogit = get_eomt_max_logit_score(p_logits, p_masks)
+                    res_maxlogit = get_eomt_max_logit_score(p_logits, p_masks, temperature=t)
                     res_msp = get_eomt_msp_score(p_logits, p_masks, temperature=t)
-                    res_maxentropy = get_eomt_max_entropy_score(p_logits, p_masks)
-                    res_rba = get_rba_score(p_logits, p_masks)
+                    res_maxentropy = get_eomt_max_entropy_score(p_logits, p_masks, temperature=t)
+                    res_rba = get_rba_score(p_logits, p_masks, temperature=t)
                     
                     anomaly_scores_dict[t]['MaxLogit'].append(upscale_score(res_maxlogit))
                     anomaly_scores_dict[t]['MSP'].append(upscale_score(res_msp))
@@ -146,8 +146,8 @@ def main():
     for t in args.temperature:
         print(f"\n--- {args.model_type.upper()} EVALUATION RESULTS on {dataset_name} (Temperature: {t}) ---")
         for method_name, scores_list in anomaly_scores_dict[t].items():
-            prc_auc, fpr = calc_metrics(ood_gts, np.array(scores_list))
-            print(f"{method_name:<12} -> AUPRC: {prc_auc*100.0:.2f} | FPR@TPR95: {fpr*100.0:.2f}")
+            prc_auc, fpr, auroc = calc_metrics(ood_gts, np.array(scores_list))
+            print(f"{method_name:<12} -> AUPRC: {prc_auc*100.0:.2f} | FPR@TPR95: {fpr*100.0:.2f} | AUROC: {auroc*100.0:.2f}")
 
 if __name__ == '__main__':
     main()

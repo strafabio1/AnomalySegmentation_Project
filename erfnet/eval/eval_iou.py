@@ -18,10 +18,13 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, CenterCrop, Normalize, Resize
 from torchvision.transforms import ToTensor, ToPILImage
 
-from dataset import cityscapes
-from erfnet import ERFNet
-from transform import Relabel, ToLabel, Colorize
-from iouEval import iouEval, getColorEntry
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+from erfnet.utils.dataset import cityscapes
+from erfnet.model.erfnet import ERFNet
+from erfnet.utils.transform import Relabel, ToLabel, Colorize
+from erfnet.eval.iouEval import iouEval, getColorEntry
 
 NUM_CHANNELS = 3
 NUM_CLASSES = 20
