@@ -2,7 +2,7 @@
 
 This repository contains the codebase for the Anomaly Segmentation Project, which builds upon the foundational architecture of the [EoMT repository](https://github.com/tue-mps/eomt). 
 
-It provides extended scripts and modules to efficiently fine-tune, train, and evaluate EoMT models on the Cityscapes dataset, alongside specialized tools for rigorous Anomaly Detection benchmarking.
+It provides extended scripts and modules to efficiently fine-tune, train, and evaluate EoMT models on the Cityscapes dataset. Anomaly segmentation benchmarking is performed through the unified evaluation pipeline located in the repository-level `anomaly_evaluation/` directory.
 
 You can find a EoMT model trained on Cityscapes dataset with the [config file](eomt/configs/dinov2/cityscapes/semantic) at this [link](https://drive.google.com/drive/folders/1q2vHUzora2nP52fP50zmoQAykWuwoGav?usp=drive_link).
 

@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import roc_curve, average_precision_score, roc_auc_score
+from sklearn.metrics import roc_curve, average_precision_score
 
 def fpr_at_95_tpr(val_out, val_label):
     """
@@ -29,6 +29,5 @@ def calc_metrics(ood_gts, anomaly_scores):
 
     prc_auc = average_precision_score(val_label, val_out)
     fpr = fpr_at_95_tpr(val_out, val_label)
-    auroc = roc_auc_score(val_label, val_out)
     
-    return prc_auc, fpr, auroc
+    return prc_auc, fpr

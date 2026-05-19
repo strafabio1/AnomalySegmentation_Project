@@ -146,8 +146,8 @@ def main():
     for t in args.temperature:
         print(f"\n--- {args.model_type.upper()} EVALUATION RESULTS on {dataset_name} (Temperature: {t}) ---")
         for method_name, scores_list in anomaly_scores_dict[t].items():
-            prc_auc, fpr, auroc = calc_metrics(ood_gts, np.array(scores_list))
-            print(f"{method_name:<12} -> AUPRC: {prc_auc*100.0:.2f} | FPR@TPR95: {fpr*100.0:.2f} | AUROC: {auroc*100.0:.2f}")
+            prc_auc, fpr = calc_metrics(ood_gts, np.array(scores_list))
+            print(f"{method_name:<12} -> AUPRC: {prc_auc*100.0:.2f} | FPR@TPR95: {fpr*100.0:.2f}")
 
 if __name__ == '__main__':
     main()
