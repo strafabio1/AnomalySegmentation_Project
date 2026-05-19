@@ -10,3 +10,5 @@ Anomaly_Validation_Datasets/
 .DS_Store
 eomt/mapping.py
 *.pyc
+*.egg-info/
+__pycache__/
