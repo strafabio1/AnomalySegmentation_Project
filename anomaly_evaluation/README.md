@@ -53,13 +53,13 @@ python -m anomaly_evaluation.evalAnomaly \
 
 ### Advanced Options
 
-- **Temperature Scaling**: You can evaluate the effect of temperature scaling on the calibration of the anomaly scores by providing one or more temperature values using the `--temperature` argument:
+- **Temperature Scaling**: You can evaluate the effect of temperature scaling on the calibration of the anomaly scores by providing one or more temperature values using the `--temperature` argument. **Note that if multiple temperatures are provided, the script computes the results efficiently by reusing the same network logits, avoiding redundant forward passes:**
   ```bash
   python -m anomaly_evaluation.evalAnomaly \
     --model_type erfnet \
     --input '/path/to/dataset/images/*.png' \
     --weights /path/to/erfnet_pretrained.pth \
-    --temperature 1.0 1.5 2.0
+    --temperature 0.5 0.75 1.0 1.5 2.0
   ```
 
 ## Notes
