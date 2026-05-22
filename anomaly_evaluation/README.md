@@ -1,86 +1,68 @@
-# Anomaly Segmentation Eval
+# Anomaly Evaluation Suite
 
-In this folder you can find some functions to evaluate your model's output. It is designed to load the ERFNet checkpoint so you need to change it when evaluating the EoMT model. The main function to look for is evalAnomaly.py that produces the Anomaly Segmentation results. Other functions could be useful for extensions.
+This directory contains the unified pipeline for evaluating anomaly segmentation and Out-Of-Distribution (OOD) detection performance. It is designed to work seamlessly with both the **ERFNet** baseline and the **EoMT** model.
 
-## Requirements:
+## Requirements
 
-It could work with the default runtime of Colab or other versions of the libraries but these are the requirements this code was tested on.
+Ensure you have installed the project's main dependencies before running the evaluation scripts. You can install them from the repository root:
 
-* [**Python 3.6**](https://www.python.org/): If you don't have Python3.6 in your system, I recommend installing it with [Anaconda](https://www.anaconda.com/download/#linux)
-* [**PyTorch**](http://pytorch.org/): Make sure to install the Pytorch version for Python 3.6 with CUDA support (code only tested for CUDA 8.0 but it should work with higher versions).
-* **Additional Python packages**: numpy, matplotlib, Pillow, torchvision and visdom (optional for --visualize flag)
-* **For testing the anomaly segmentation model**: Road Anomaly, Road Obstacle, and Fishyscapes dataset. All testing images are provided here [Link](https://drive.google.com/file/d/1r2eFANvSlcUjxcerjC8l6dRa0slowMpx/view).
-
-## Anomaly Inference:
-
-* Anomaly Inference Command:```python -m anomaly_evaluation.evalAnomaly --input '/home/amarinai/segmentation/unk-dataset/RoadAnomaly21/images/*.png```. Change the dataset path ```'/home/amarinai/segmentation/unk-dataset/RoadAnomaly21/images/*.png```accordingly.
-
-## Functions for evaluating/visualizing the network's output
-
-Currently there are 5 usable functions to evaluate stuff:
-- evalAnomaly
-- eval_cityscapes_color
-- eval_cityscapes_server
-- eval_iou
-- eval_forwardTime
-
-
-## evalAnomaly.py
-
-This code can be used to produce anomaly segmentation results on various anomaly metrics on the validation datasets you can download [here](https://drive.google.com/file/d/1zcayoIIJztxKuHOIjmSjGoQBDy4RdETr/view?usp=drive_link)
-
-**Examples:**
-```
-python -m anomaly_evaluation.evalAnomaly --input '/home/amarinai/ViT-Adapter/segmentation/unk-dataset/RoadAnomaly21/images/*.png'
+```bash
+pip install -r requirements.txt
 ```
 
-# Code on Citiscapes (probably not needed)
+## Directory Structure
 
-This code can be used to produce segmentation of the Cityscapes images in color for visualization purposes. By default it saves images in eval/save_color/ folder. You can also visualize results in visdom with --visualize flag.
+- **`evalAnomaly.py`**: The main evaluation script that computes anomaly scores (MSP, MaxLogit, MaxEntropy, and optionally RbA for EoMT) and evaluation metrics (AUPRC and FPR@TPR95).
+- **`model_builder.py`**: Helper module to load ERFNet and EoMT checkpoints and configurations.
+- **`ood_metrics.py`**: Contains the logic to compute standard OOD metrics (AUPRC, FPR@TPR95) from prediction scores and ground truth masks.
+- **`post_hoc.py`**: Implementation of several post-hoc scoring functions (MSP, MaxLogit, MaxEntropy, RbA) adapted for both architectures.
 
-* [**The Cityscapes dataset**](https://www.cityscapes-dataset.com/): Download the "leftImg8bit" for the RGB images and the "gtFine" for the labels. **Please note that for training you should use the "_labelTrainIds" and not the "_labelIds", you can download the [cityscapes scripts](https://github.com/mcordts/cityscapesScripts) and use the [conversor](https://github.com/mcordts/cityscapesScripts/blob/master/cityscapesscripts/preparation/createTrainIdLabelImgs.py) to generate trainIds from labelIds**
-## eval_cityscapes_color.py 
+## Datasets
 
-**Options:** Specify the Cityscapes folder path with '--datadir' option. Select the cityscapes subset with '--subset' ('val', 'test', 'train' or 'demoSequence'). For other options check the bottom side of the file.
+For testing the anomaly segmentation model, the supported datasets include Road Anomaly, Road Obstacle, Fishyscapes, LostAndFound, and Streethazard. 
+You can download the testing images [here](https://drive.google.com/file/d/1r2eFANvSlcUjxcerjC8l6dRa0slowMpx/view) or the validation datasets [here](https://drive.google.com/file/d/1zcayoIIJztxKuHOIjmSjGoQBDy4RdETr/view?usp=drive_link).
 
-**Examples:**
-```
-python -m erfnet.eval.eval_cityscapes_color --datadir /home/datasets/cityscapes/ --subset val
-```
+## Anomaly Evaluation Pipeline
 
-## eval_cityscapes_server.py 
+**⚠️ IMPORTANT: All commands must be executed from the root directory of the repository.**
 
-This code can be used to produce segmentation of the Cityscapes images and convert the output indices to the original 'labelIds' so it can be evaluated using the scripts from Cityscapes dataset (evalPixelLevelSemanticLabeling.py) or uploaded to Cityscapes test server. By default it saves images in eval/save_results/ folder.
+The `evalAnomaly.py` script automatically computes and reports the metrics on common anomaly segmentation datasets. The script expects the dataset to follow a standard structure where `images` and `labels_masks` folders are present.
 
-**Options:** Specify the Cityscapes folder path with '--datadir' option. Select the cityscapes subset with '--subset' ('val', 'test', 'train' or 'demoSequence'). For other options check the bottom side of the file.
+### Evaluating ERFNet
 
-**Examples:**
-```
-python -m erfnet.eval.eval_cityscapes_server --datadir /home/datasets/cityscapes/ --subset val
-```
+To evaluate the ERFNet model, provide the path to the images and the checkpoint weights:
 
-## eval_iou.py 
-
-This code can be used to calculate the IoU (mean and per-class) in a subset of images with labels available, like Cityscapes val/train sets.
-
-**Options:** Specify the Cityscapes folder path with '--datadir' option. Select the cityscapes subset with '--subset' ('val' or 'train'). For other options check the bottom side of the file.
-
-**Examples:**
-```
-python -m erfnet.eval.eval_iou --datadir /home/datasets/cityscapes/ --subset val
+```bash
+python -m anomaly_evaluation.evalAnomaly \
+  --model_type erfnet \
+  --input '/path/to/dataset/images/*.png' \
+  --weights /path/to/erfnet_pretrained.pth
 ```
 
-## eval_forwardTime.py
-This function loads a model specified by '-m' and enters a loop to continuously estimate forward pass time (fwt) in the specified resolution. 
+### Evaluating EoMT
 
-**Options:** Option '--width' specifies the width (default: 1024). Option '--height' specifies the height (default: 512). For other options check the bottom side of the file.
+To evaluate the EoMT model, you must also provide the corresponding configuration file:
 
-**Examples:**
+```bash
+python -m anomaly_evaluation.evalAnomaly \
+  --model_type eomt \
+  --input '/path/to/dataset/images/*.png' \
+  --weights /path/to/eomt_checkpoint.bin \
+  --config /path/to/config.yaml
 ```
-python -m erfnet.eval.eval_forwardTime
-```
 
-**NOTE**: The pytorch code is a bit faster, but cudahalf (FP16) seems to give problems at the moment for some pytorch versions so this code only runs at FP32 (a bit slower).
+### Advanced Options
 
+- **Temperature Scaling**: You can evaluate the effect of temperature scaling on the calibration of the anomaly scores by providing one or more temperature values using the `--temperature` argument:
+  ```bash
+  python -m anomaly_evaluation.evalAnomaly \
+    --model_type erfnet \
+    --input '/path/to/dataset/images/*.png' \
+    --weights /path/to/erfnet_pretrained.pth \
+    --temperature 1.0 1.5 2.0
+  ```
 
+## Notes
 
+- The script automatically handles target image sizes: ERFNet uses `(512, 1024)`, while EoMT dynamically adjusts depending on whether it was trained on Cityscapes `(1024, 1024)` or COCO `(640, 640)`.
+- The evaluation requires anomalous test images and ground truth masks formatted appropriately for the datasets specified.

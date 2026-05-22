@@ -52,6 +52,8 @@ wget --load-cookies cookies.txt --content-disposition https://www.cityscapes-dat
 
 ## Usage
 
+**⚠️ IMPORTANT: All commands must be executed from the root directory of the repository.**
+
 ### Training & Finetuning
 
 To train EoMT from scratch (not recommended in Colab due to resource constraints):

@@ -28,6 +28,8 @@ pip install -r requirements.txt
 
 ## Evaluation
 
+**⚠️ IMPORTANT: All commands must be executed from the root directory of the repository.**
+
 To calculate the mean Intersection over Union (mIoU) and per-class IoU for the ERFNet model on the Cityscapes validation or training set, you can use the `eval_iou.py` script located in the `eval/` directory.
 
 **Options:**
