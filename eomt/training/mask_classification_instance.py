@@ -12,8 +12,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from training.mask_classification_loss import MaskClassificationLoss
-from training.lightning_module import LightningModule
+from eomt.training.mask_classification_loss import MaskClassificationLoss
+from eomt.training.lightning_module import LightningModule
 
 
 class MaskClassificationInstance(LightningModule):

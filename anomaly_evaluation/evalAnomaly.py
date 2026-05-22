@@ -1,9 +1,5 @@
 import sys
 from pathlib import Path
-# Aggiunto per permettere le importazioni assolute senza pip install -e .
-project_root = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(project_root))
-sys.path.insert(0, str(project_root / 'eomt'))
 
 import os
 import glob
@@ -15,9 +11,9 @@ from argparse import ArgumentParser
 from torchvision.transforms import Compose, Resize, ToTensor
 import torch.nn.functional as F
 
-from ood_metrics import calc_metrics
-from post_hoc import get_msp_score, get_max_logit_score, get_max_entropy_score, get_rba_score, get_eomt_msp_score, get_eomt_max_logit_score, get_eomt_max_entropy_score
-from model_builder import load_erfnet, load_eomt
+from anomaly_evaluation.ood_metrics import calc_metrics
+from anomaly_evaluation.post_hoc import get_msp_score, get_max_logit_score, get_max_entropy_score, get_rba_score, get_eomt_msp_score, get_eomt_max_logit_score, get_eomt_max_entropy_score
+from anomaly_evaluation.model_builder import load_erfnet, load_eomt
 
 
 def main():
@@ -156,8 +152,9 @@ def main():
     for t in args.temperature:
         print(f"\n--- {args.model_type.upper()} EVALUATION RESULTS on {dataset_name} (Temperature: {t}) ---")
         for method_name, scores_list in anomaly_scores_dict[t].items():
-            prc_auc, fpr = calc_metrics(ood_gts, np.array(scores_list))
-            print(f"{method_name:<12} -> AUPRC: {prc_auc*100.0:.2f} | FPR@TPR95: {fpr*100.0:.2f}")
+            if method_name == 'MSP':
+                prc_auc, fpr = calc_metrics(ood_gts, np.array(scores_list))
+                print(f"{method_name:<12} -> AUPRC: {prc_auc*100.0:.2f} | FPR@TPR95: {fpr*100.0:.2f}")
 
 if __name__ == '__main__':
     main()

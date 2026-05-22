@@ -56,7 +56,7 @@ wget --load-cookies cookies.txt --content-disposition https://www.cityscapes-dat
 
 To train EoMT from scratch (not recommended in Colab due to resource constraints):
 ```bash
-python3 main.py fit \
+python -m eomt.main fit \
   -c configs/dinov2/cityscapes/semantic/eomt_base_640.yaml \
   --trainer.devices 4 \
   --data.batch_size 4 \
@@ -69,7 +69,7 @@ To fine-tune a pre-trained COCO EoMT model on Cityscapes, you can control how ma
 
 *1. Finetune ONLY the Classification Head (0 blocks unfrozen):*
 ```bash
-python main.py fit \
+python -m eomt.main fit \
   -c configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml \
   --data.batch_size 8 \
   --trainer.accumulate_grad_batches 2 \
@@ -84,7 +84,7 @@ python main.py fit \
 *2. Finetune unfreezing the last N blocks:*
 You can progressively unfreeze more blocks by changing `--model.network.init_args.unfreeze_last_n_blocks` to `1`, `2`, or `3`. For example, to unfreeze the last 3 blocks:
 ```bash
-python main.py fit \
+python -m eomt.main fit \
   -c configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml \
   --data.batch_size 8 \
   --trainer.accumulate_grad_batches 2 \
@@ -104,7 +104,7 @@ python main.py fit \
 You can use the custom `eval_mIou.py` script to evaluate the Mean Intersection over Union (mIoU) on the Cityscapes validation set. The script intelligently handles mapping if you pass the COCO pre-trained model.
 
 ```bash
-python eval_mIou.py \
+python -m eomt.eval_mIou \
   --config configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml \
   --weights /path/to/pytorch_model.bin \
   --data_path /path/to/Cityscapes \

@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+
 # ---------------------------------------------------------------
 # © 2025 Mobile Perception Systems Lab at TU/e. All rights reserved.
 # Licensed under the MIT License.
@@ -18,8 +21,8 @@ from lightning.pytorch.callbacks import ModelSummary, LearningRateMonitor
 from lightning.pytorch.loops.training_epoch_loop import _TrainingEpochLoop
 from lightning.pytorch.loops.fetchers import _DataFetcher, _DataLoaderIterDataFetcher
 
-from training.lightning_module import LightningModule
-from datasets.lightning_data_module import LightningDataModule
+from eomt.training.lightning_module import LightningModule
+from eomt.datasets.lightning_data_module import LightningDataModule
 
 # Suppress PyTorch FX warnings for DINOv3 models
 import os

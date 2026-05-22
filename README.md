@@ -25,9 +25,10 @@ For detailed instructions on running the scripts, please refer to the specific `
 
 ## Installation and Requirements
 
-To run the scripts and ensure that all internal Python imports work correctly from any directory, you must install the dependencies and the project package in editable mode. Execute the following commands from the project root:
+To run the scripts, you must install the required dependencies. Execute the following command from the project root:
 
 ```bash
 pip install -r requirements.txt
-pip install -e .
 ```
+
+*Note: The scripts are configured to automatically resolve internal imports, so you can run them directly from any directory without needing to install the project as a package.*

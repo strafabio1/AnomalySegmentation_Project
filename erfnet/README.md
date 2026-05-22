@@ -37,7 +37,7 @@ To calculate the mean Intersection over Union (mIoU) and per-class IoU for the E
 
 **Example:**
 ```bash
-python eval/eval_iou.py --datadir /path/to/cityscapes/ --subset val
+python -m erfnet.eval.eval_iou --datadir /path/to/cityscapes/ --subset val
 ```
 
 ## Usage Note

@@ -13,7 +13,7 @@ It could work with the default runtime of Colab or other versions of the librari
 
 ## Anomaly Inference:
 
-* Anomaly Inference Command:```python evalAnomaly.py --input '/home/amarinai/segmentation/unk-dataset/RoadAnomaly21/images/*.png```. Change the dataset path ```'/home/amarinai/segmentation/unk-dataset/RoadAnomaly21/images/*.png```accordingly.
+* Anomaly Inference Command:```python -m anomaly_evaluation.evalAnomaly --input '/home/amarinai/segmentation/unk-dataset/RoadAnomaly21/images/*.png```. Change the dataset path ```'/home/amarinai/segmentation/unk-dataset/RoadAnomaly21/images/*.png```accordingly.
 
 ## Functions for evaluating/visualizing the network's output
 
@@ -31,7 +31,7 @@ This code can be used to produce anomaly segmentation results on various anomaly
 
 **Examples:**
 ```
-python evalAnomaly.py --input '/home/amarinai/ViT-Adapter/segmentation/unk-dataset/RoadAnomaly21/images/*.png'
+python -m anomaly_evaluation.evalAnomaly --input '/home/amarinai/ViT-Adapter/segmentation/unk-dataset/RoadAnomaly21/images/*.png'
 ```
 
 # Code on Citiscapes (probably not needed)
@@ -45,7 +45,7 @@ This code can be used to produce segmentation of the Cityscapes images in color 
 
 **Examples:**
 ```
-python eval_cityscapes_color.py --datadir /home/datasets/cityscapes/ --subset val
+python -m erfnet.eval.eval_cityscapes_color --datadir /home/datasets/cityscapes/ --subset val
 ```
 
 ## eval_cityscapes_server.py 
@@ -56,7 +56,7 @@ This code can be used to produce segmentation of the Cityscapes images and conve
 
 **Examples:**
 ```
-python eval_cityscapes_server.py --datadir /home/datasets/cityscapes/ --subset val
+python -m erfnet.eval.eval_cityscapes_server --datadir /home/datasets/cityscapes/ --subset val
 ```
 
 ## eval_iou.py 
@@ -67,7 +67,7 @@ This code can be used to calculate the IoU (mean and per-class) in a subset of i
 
 **Examples:**
 ```
-python eval_iou.py --datadir /home/datasets/cityscapes/ --subset val
+python -m erfnet.eval.eval_iou --datadir /home/datasets/cityscapes/ --subset val
 ```
 
 ## eval_forwardTime.py
@@ -77,7 +77,7 @@ This function loads a model specified by '-m' and enters a loop to continuously 
 
 **Examples:**
 ```
-python eval_forwardTime.py
+python -m erfnet.eval.eval_forwardTime
 ```
 
 **NOTE**: The pytorch code is a bit faster, but cudahalf (FP16) seems to give problems at the moment for some pytorch versions so this code only runs at FP32 (a bit slower).
