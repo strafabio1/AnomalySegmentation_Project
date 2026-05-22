@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+# Aggiunto per permettere le importazioni assolute senza pip install -e .
+project_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / 'eomt'))
+
 import os
 import glob
 import torch
@@ -95,7 +102,8 @@ def main():
         with torch.no_grad():
             if args.model_type == 'erfnet':
                 img = Image.open(path).convert('RGB')
-                images = erfnet_transform(img).unsqueeze(0).float().to(device)
+                
+                images = erfnet_transform(img).unsqueeze(0).to(device)
                 
                 logits = model(images)
                 
@@ -109,9 +117,11 @@ def main():
                     anomaly_scores_dict[t]['MaxEntropy'].append(res_maxentropy)
                 
             elif args.model_type == 'eomt':
-                img_bgr = cv2.imread(path)
-                img_resized = cv2.resize(img_bgr, (eval_size[1], eval_size[0]), interpolation=cv2.INTER_LINEAR)
-                images = torch.from_numpy(img_resized).permute(2, 0, 1).unsqueeze(0).float().to(device)
+                img = Image.open(path).convert('RGB')
+                img_resized = img.resize((eval_size[1], eval_size[0]), Image.BILINEAR)
+
+                img_array = np.array(img_resized)
+                images = torch.from_numpy(img_array).permute(2, 0, 1).unsqueeze(0).float().to(device)
                 
                 outputs = model(images)
                 p_logits = outputs[1][-1]

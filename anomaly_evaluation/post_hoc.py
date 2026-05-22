@@ -35,8 +35,7 @@ def get_eomt_known_class_scores(pred_logits, pred_masks, temperature=1.0):
 
 def get_eomt_msp_score(pred_logits, pred_masks, temperature=1.0):
     known_scores = get_eomt_known_class_scores(pred_logits, pred_masks, temperature)
-    probs = F.softmax(known_scores, dim=1) 
-    max_prob, _ = torch.max(probs, dim=1)
+    max_prob, _ = torch.max(known_scores, dim=1)
     return 1.0 - max_prob
 
 def get_eomt_max_logit_score(pred_logits, pred_masks, temperature=1.0):
@@ -46,8 +45,9 @@ def get_eomt_max_logit_score(pred_logits, pred_masks, temperature=1.0):
 
 def get_eomt_max_entropy_score(pred_logits, pred_masks, temperature=1.0):
     known_scores = get_eomt_known_class_scores(pred_logits, pred_masks, temperature)
-    probs = F.softmax(known_scores, dim=1)
-    log_probs = F.log_softmax(known_scores, dim=1)
+    eps = 1e-8
+    probs = known_scores / (known_scores.sum(dim=1, keepdim=True) + eps)
+    log_probs = torch.log(probs + eps)
     entropy = -torch.sum(probs * log_probs, dim=1)
     return entropy
 
