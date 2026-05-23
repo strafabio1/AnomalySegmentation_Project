@@ -16,6 +16,37 @@ from anomaly_evaluation.post_hoc import get_msp_score, get_max_logit_score, get_
 from anomaly_evaluation.model_builder import load_erfnet, load_eomt
 
 
+def load_and_prepare_mask(pathGT, target_transform):
+    """
+    Loads the ground truth mask and maps dataset-specific labels 
+    to a unified anomaly format: 1 for anomaly, 0 for normal/in-distribution, 
+    and 255 for ignored regions.
+    """
+    if "RoadObsticle21" in pathGT:
+        pathGT = pathGT.replace("webp", "png")
+    if "fs_static" in pathGT:
+        pathGT = pathGT.replace("jpg", "png")                
+    if "RoadAnomaly" in pathGT:
+        pathGT = pathGT.replace("jpg", "png")  
+    
+    mask = Image.open(pathGT)
+    mask = target_transform(mask)
+    ood_gts = np.array(mask)
+
+    if "RoadAnomaly" in pathGT:
+        ood_gts = np.where((ood_gts==2), 1, ood_gts)
+    if "LostAndFound" in pathGT:
+        ood_gts = np.where((ood_gts==0), 255, ood_gts)
+        ood_gts = np.where((ood_gts==1), 0, ood_gts)
+        ood_gts = np.where((ood_gts>1)&(ood_gts<201), 1, ood_gts)
+    if "Streethazard" in pathGT:
+        ood_gts = np.where((ood_gts==14), 255, ood_gts)
+        ood_gts = np.where((ood_gts<20), 0, ood_gts)
+        ood_gts = np.where((ood_gts==255), 1, ood_gts)
+        
+    return ood_gts
+
+
 def main():
     parser = ArgumentParser()
     parser.add_argument("--input", required=True, nargs="+")
@@ -67,27 +98,8 @@ def main():
     for path in glob.glob(os.path.expanduser(str(args.input[0]))):
         
         pathGT = path.replace("images", "labels_masks")                
-        if "RoadObsticle21" in pathGT:
-           pathGT = pathGT.replace("webp", "png")
-        if "fs_static" in pathGT:
-           pathGT = pathGT.replace("jpg", "png")                
-        if "RoadAnomaly" in pathGT:
-           pathGT = pathGT.replace("jpg", "png")  
         
-        mask = Image.open(pathGT)
-        mask = target_transform(mask)
-        ood_gts = np.array(mask)
-
-        if "RoadAnomaly" in pathGT:
-            ood_gts = np.where((ood_gts==2), 1, ood_gts)
-        if "LostAndFound" in pathGT:
-            ood_gts = np.where((ood_gts==0), 255, ood_gts)
-            ood_gts = np.where((ood_gts==1), 0, ood_gts)
-            ood_gts = np.where((ood_gts>1)&(ood_gts<201), 1, ood_gts)
-        if "Streethazard" in pathGT:
-            ood_gts = np.where((ood_gts==14), 255, ood_gts)
-            ood_gts = np.where((ood_gts<20), 0, ood_gts)
-            ood_gts = np.where((ood_gts==255), 1, ood_gts)
+        ood_gts = load_and_prepare_mask(pathGT, target_transform)
             
         
         if 1 not in np.unique(ood_gts):

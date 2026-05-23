@@ -174,11 +174,9 @@ def main():
 
     seed_everything(0, verbose=False)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # Load Config
     with open(args.config, "r") as f:
         config = yaml.safe_load(f)
 
-    # Initialize Dataset
     data_module_name, class_name = config["data"]["class_path"].rsplit(".", 1)
     data_module = getattr(importlib.import_module(data_module_name), class_name)
     data_kwargs = config["data"].get("init_args", {})
@@ -193,7 +191,6 @@ def main():
     dataset.setup()
     val_dataloader = dataset.val_dataloader()
 
-    # Load Model
     print("Initializing model...")
     model = build_and_load_model(config, dataset, args.weights, device)
 
@@ -204,7 +201,6 @@ def main():
 
     is_coco = "eomt_coco.bin" in args.weights
 
-    # Setup Metrics and Mapping
     if is_coco:
         metric = MulticlassJaccardIndex(num_classes=20, ignore_index=IGNORE_INDEX, average="none").to(device)
         mapping_tensor = get_coco_to_cityscapes_mapping(device)
@@ -238,7 +234,6 @@ def main():
                 target_common_tensor = target_tensor
                 
             if is_coco:
-                # Map COCO predictions to Cityscapes
                 preds_mapped_tensor = mapping_tensor[preds_tensor]
                 metric.update(preds_mapped_tensor, target_common_tensor)
             else:
