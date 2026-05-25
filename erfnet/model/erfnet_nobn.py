@@ -55,7 +55,7 @@ class non_bottleneck_1d (nn.Module):
         output = F.relu(output)
         output = self.conv1x3_2(output)
         #output = self.bn2(output)
-        #output = F.relu(output)    #ESTO ESTABA MAL
+        #output = F.relu(output)
 
         #if (self.dropout.p != 0):
         #    output = self.dropout(output)
