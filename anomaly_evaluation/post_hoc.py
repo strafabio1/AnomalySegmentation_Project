@@ -38,10 +38,12 @@ def get_eomt_msp_score(pred_logits, pred_masks, temperature=1.0):
     max_prob, _ = torch.max(known_scores, dim=1)
     return 1.0 - max_prob
 
-def get_eomt_max_logit_score(pred_logits, pred_masks, temperature=1.0):
-    known_scores = get_eomt_known_class_scores(pred_logits, pred_masks, temperature)
-    max_score, _ = torch.max(known_scores, dim=1)
-    return -max_score
+def get_eomt_max_logit_score(pred_logits, pred_masks):
+    logits_known = pred_logits[..., :-1]     
+    mask_probs = torch.sigmoid(pred_masks)
+    pixel_logits = torch.einsum("bqc,bqhw->bchw", logits_known, mask_probs)
+    max_logit, _ = torch.max(pixel_logits, dim=1)
+    return -max_logit
 
 def get_eomt_max_entropy_score(pred_logits, pred_masks, temperature=1.0):
     known_scores = get_eomt_known_class_scores(pred_logits, pred_masks, temperature)
@@ -51,7 +53,7 @@ def get_eomt_max_entropy_score(pred_logits, pred_masks, temperature=1.0):
     entropy = -torch.sum(probs * log_probs, dim=1)
     return entropy
 
-def get_rba_score(pred_logits, pred_masks, temperature=1.0):
-    known_scores = get_eomt_known_class_scores(pred_logits, pred_masks, temperature)
+def get_rba_score(pred_logits, pred_masks):
+    known_scores = get_eomt_known_class_scores(pred_logits, pred_masks)
     rba_score = -torch.sum(torch.tanh(known_scores), dim=1)
     return rba_score

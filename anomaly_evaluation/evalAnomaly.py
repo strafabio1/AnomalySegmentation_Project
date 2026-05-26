@@ -141,10 +141,10 @@ def main():
                     return s_upscaled.squeeze().cpu().numpy()
 
                 for t in args.temperature:
-                    res_maxlogit = get_eomt_max_logit_score(p_logits, p_masks, temperature=t)
+                    res_maxlogit = get_eomt_max_logit_score(p_logits, p_masks)
                     res_msp = get_eomt_msp_score(p_logits, p_masks, temperature=t)
                     res_maxentropy = get_eomt_max_entropy_score(p_logits, p_masks, temperature=t)
-                    res_rba = get_rba_score(p_logits, p_masks, temperature=t)
+                    res_rba = get_rba_score(p_logits, p_masks)
                     
                     anomaly_scores_dict[t]['MaxLogit'].append(upscale_score(res_maxlogit))
                     anomaly_scores_dict[t]['MSP'].append(upscale_score(res_msp))
