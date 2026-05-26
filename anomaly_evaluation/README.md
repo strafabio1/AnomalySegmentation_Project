@@ -19,8 +19,8 @@ pip install -r requirements.txt
 
 ## Datasets
 
-For testing the anomaly segmentation model, the supported datasets include Road Anomaly, Road Obstacle, Fishyscapes, LostAndFound, and Streethazard. 
-You can download the testing images [here](https://drive.google.com/file/d/1r2eFANvSlcUjxcerjC8l6dRa0slowMpx/view) or the validation datasets [here](https://drive.google.com/file/d/1zcayoIIJztxKuHOIjmSjGoQBDy4RdETr/view?usp=drive_link).
+For testing the anomaly segmentation model, the supported datasets include Road Anomaly, Road Obstacle, Fishyscapes, LostAndFound, and Streethazard.
+You can download the validation datasets [here](https://drive.google.com/file/d/1zcayoIIJztxKuHOIjmSjGoQBDy4RdETr/view?usp=drive_link).
 
 ## Anomaly Evaluation Pipeline
 
