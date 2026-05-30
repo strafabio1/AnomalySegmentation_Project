@@ -105,13 +105,14 @@ You can use the custom `eval_mIou.py` script to evaluate the Mean Intersection o
 
 ```bash
 python -m eomt.eval_mIou \
-  --config eomt/configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml \
+  --config /path/to/config.yaml \
   --weights /path/to/pytorch_model.bin \
   --data_path /path/to/Cityscapes \
   --eval_type mapped_17
 ```
 
 🔧 Replace `/path/to/pytorch_model.bin` with the path to the checkpoint to evaluate.
+🔧 Replace `/path/to/config.yaml` with the path to the configuration file you want to use.
 
 *Arguments:*
 - `--eval_type mapped_17`: Evaluates the model strictly on 17 common classes, automatically ignoring `pole` and `rider` from the targets. If the weights file is `eomt_coco.bin`, it automatically maps the COCO output to the Cityscapes format.
