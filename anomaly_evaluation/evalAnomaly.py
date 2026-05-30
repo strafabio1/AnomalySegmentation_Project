@@ -153,7 +153,6 @@ def main():
                     anomaly_scores_dict[t]['MSP'].append(upscale_score(res_msp))
                     anomaly_scores_dict[t]['MaxEntropy'].append(upscale_score(res_maxentropy))
                                 
-        torch.cuda.empty_cache()
 
     if len(ood_gts_list) == 0:
         print("Error: No valid evaluation images found containing anomalies.")
