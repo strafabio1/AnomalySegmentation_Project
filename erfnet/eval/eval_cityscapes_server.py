@@ -66,10 +66,8 @@ cityscapes_trainIds2labelIds = Compose([
 
 def main(args):
 
-    modelpath = args.loadDir + args.loadModel
     weightspath = args.loadDir + args.loadWeights
 
-    print ("Loading model: " + modelpath)
     print ("Loading weights: " + weightspath)
 
     #Import ERFNet model from the folder
@@ -131,11 +129,11 @@ if __name__ == '__main__':
 
     parser.add_argument('--state')
 
-    parser.add_argument('--loadDir',default="../trained_models/")
+    parser.add_argument('--loadDir',default="erfnet/trained_models/")
     parser.add_argument('--loadWeights', default="erfnet_pretrained.pth")
-    parser.add_argument('--loadModel', default="erfnet.py")
+
     parser.add_argument('--subset', default="val")  #can be val, test, train, demoSequence
-    parser.add_argument('--datadir', default=os.getenv("HOME") + "/datasets/cityscapes/")
+    parser.add_argument('--datadir', default="./Cityscapes")
     parser.add_argument('--num-workers', type=int, default=4)
     parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--cpu', action='store_true')

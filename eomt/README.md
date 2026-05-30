@@ -59,7 +59,7 @@ wget --load-cookies cookies.txt --content-disposition https://www.cityscapes-dat
 To train EoMT from scratch (not recommended in Colab due to resource constraints):
 ```bash
 python -m eomt.main fit \
-  -c configs/dinov2/cityscapes/semantic/eomt_base_640.yaml \
+  -c eomt/configs/dinov2/cityscapes/semantic/eomt_base_640.yaml \
   --trainer.devices 4 \
   --data.batch_size 4 \
   --data.path /path/to/dataset
@@ -72,12 +72,11 @@ To fine-tune a pre-trained COCO EoMT model on Cityscapes, you can control how ma
 *1. Finetune ONLY the Classification Head (0 blocks unfrozen):*
 ```bash
 python -m eomt.main fit \
-  -c configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml \
+  -c eomt/configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml \
   --data.batch_size 8 \
   --trainer.accumulate_grad_batches 2 \
   --data.path /path/to/Cityscapes \
   --trainer.devices 1 \
-  --trainer.logger.init_args.name "finetune_only_Head" \
   --model.network.init_args.unfreeze_last_n_blocks 0 \
   --model.load_ckpt_class_head False \
   --model.ckpt_path /path/to/pytorch_model.bin
@@ -87,12 +86,11 @@ python -m eomt.main fit \
 You can progressively unfreeze more blocks by changing `--model.network.init_args.unfreeze_last_n_blocks` to `1`, `2`, or `3`. For example, to unfreeze the last 3 blocks:
 ```bash
 python -m eomt.main fit \
-  -c configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml \
+  -c eomt/configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml \
   --data.batch_size 8 \
   --trainer.accumulate_grad_batches 2 \
   --data.path /path/to/Cityscapes \
   --trainer.devices 1 \
-  --trainer.logger.init_args.name "finetune_unfreeze3" \
   --model.network.init_args.unfreeze_last_n_blocks 3 \
   --model.load_ckpt_class_head False \
   --model.ckpt_path /path/to/pytorch_model.bin
@@ -107,7 +105,7 @@ You can use the custom `eval_mIou.py` script to evaluate the Mean Intersection o
 
 ```bash
 python -m eomt.eval_mIou \
-  --config configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml \
+  --config eomt/configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml \
   --weights /path/to/pytorch_model.bin \
   --data_path /path/to/Cityscapes \
   --eval_type mapped_17

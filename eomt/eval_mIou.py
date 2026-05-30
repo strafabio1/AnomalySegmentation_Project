@@ -191,6 +191,16 @@ def main():
     dataset.setup()
     val_dataloader = dataset.val_dataloader()
 
+    # Dynamically determine the architecture's required num_classes by inspecting the checkpoint
+    try:
+        tmp_ckpt = torch.load(args.weights, map_location="cpu", weights_only=False)
+        tmp_sd = tmp_ckpt.get("state_dict", tmp_ckpt)
+        if "network.class_head.weight" in tmp_sd:
+            head_classes = tmp_sd["network.class_head.weight"].shape[0]
+            dataset.num_classes = head_classes - 1
+    except Exception as e:
+        print(f"Warning: Could not dynamically inspect checkpoint to set num_classes: {e}")
+
     print("Initializing model...")
     model = build_and_load_model(config, dataset, args.weights, device)
 
@@ -199,7 +209,7 @@ def main():
         print(f"Error: Requested 'all_19' evaluation but the model produces {model.num_classes} classes instead of 19.")
         sys.exit(1)
 
-    is_coco = "eomt_coco.bin" in args.weights
+    is_coco = (model.num_classes > 100)
 
     if is_coco:
         metric = MulticlassJaccardIndex(num_classes=20, ignore_index=IGNORE_INDEX, average="none").to(device)
