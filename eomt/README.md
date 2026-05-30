@@ -115,5 +115,5 @@ python -m eomt.eval_mIou \
 🔧 Replace `/path/to/config.yaml` with the path to the configuration file you want to use.
 
 *Arguments:*
-- `--eval_type mapped_17`: Evaluates the model strictly on 17 common classes, automatically ignoring `pole` and `rider` from the targets. If the weights file is `eomt_coco.bin`, it automatically maps the COCO output to the Cityscapes format.
+- `--eval_type mapped_17`: Evaluates the model strictly on 17 common classes, automatically ignoring `pole` and `rider` from the targets. The script dynamically inspects the provided weights file, and if it detects a COCO-sized architecture, it automatically maps the COCO output to the Cityscapes format.
 - `--eval_type all_19`: Evaluates the model on all 19 standard Cityscapes classes. **Note:** This will throw an error if the model does not output exactly 19 classes (e.g. if you try to evaluate the raw COCO model with this parameter).
