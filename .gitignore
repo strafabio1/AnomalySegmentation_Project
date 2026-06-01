@@ -13,3 +13,4 @@ eomt/mapping.py
 *.egg-info/
 __pycache__/
 eomt/Anomaly_validation.ipynb
+*.png

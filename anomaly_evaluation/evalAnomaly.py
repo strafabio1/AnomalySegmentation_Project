@@ -84,12 +84,12 @@ def main():
     anomaly_scores_dict = {}
     for t in args.temperature:
         anomaly_scores_dict[t] = {
-            'MSP': [],
-            'MaxEntropy': []
+            'MSP': []
         }
 
     invariant_scores_dict = {
-        'MaxLogit': []
+        'MaxLogit': [],
+        'MaxEntropy': []
     }
     if args.model_type == 'eomt':
         invariant_scores_dict['RbA'] = []
@@ -117,13 +117,13 @@ def main():
                 logits = model(images)
                 
                 res_maxlogit = get_max_logit_score(logits)[0].cpu().numpy()
+                res_maxentropy = get_max_entropy_score(logits)[0].cpu().numpy()
                 invariant_scores_dict['MaxLogit'].append(res_maxlogit)
+                invariant_scores_dict['MaxEntropy'].append(res_maxentropy)
                 
                 for t in args.temperature:
                     res_msp = get_msp_score(logits, temperature=t)[0].cpu().numpy()
-                    res_maxentropy = get_max_entropy_score(logits, temperature=t)[0].cpu().numpy()
                     anomaly_scores_dict[t]['MSP'].append(res_msp)
-                    anomaly_scores_dict[t]['MaxEntropy'].append(res_maxentropy)
                 
             elif args.model_type == 'eomt':
                 img = Image.open(path).convert('RGB')
@@ -142,16 +142,16 @@ def main():
                     return s_upscaled.squeeze().cpu().numpy()
 
                 res_maxlogit = get_eomt_max_logit_score(p_logits, p_masks)
+                res_maxentropy = get_eomt_max_entropy_score(p_logits, p_masks)
                 res_rba = get_rba_score(p_logits, p_masks)
                 
                 invariant_scores_dict['MaxLogit'].append(upscale_score(res_maxlogit))
+                invariant_scores_dict['MaxEntropy'].append(upscale_score(res_maxentropy))
                 invariant_scores_dict['RbA'].append(upscale_score(res_rba))
 
                 for t in args.temperature:
                     res_msp = get_eomt_msp_score(p_logits, p_masks, temperature=t)
-                    res_maxentropy = get_eomt_max_entropy_score(p_logits, p_masks, temperature=t)
                     anomaly_scores_dict[t]['MSP'].append(upscale_score(res_msp))
-                    anomaly_scores_dict[t]['MaxEntropy'].append(upscale_score(res_maxentropy))
                                 
 
     if len(ood_gts_list) == 0:
