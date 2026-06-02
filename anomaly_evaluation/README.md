@@ -62,7 +62,7 @@ python -m anomaly_evaluation.evalAnomaly \
     --temperature 0.5 0.75 1.0 1.5 2.0
   ```
 
-- **Model visual comparison**: You can assess visually how models perform on a dataset by looking at their output anomaly map:**
+- **Models visual comparison**: You can assess visually how models perform on a dataset by looking at their output anomaly map:**
 
   ```bash
   python -m anomaly_evaluation.compare_models \
