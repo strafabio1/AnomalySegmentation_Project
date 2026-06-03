@@ -12,6 +12,7 @@ pip install -r requirements.txt
 
 ## Directory Structure
 
+- **`compare_models.py`**: Script to qualitatively compare the anomaly maps produced by ERFNet, EoMT (Cityscapes), EoMT (COCO), and the fine-tuned EoMT using a single post-hoc method.
 - **`evalAnomaly.py`**: The main evaluation script that computes anomaly scores (MSP, MaxLogit, MaxEntropy, and optionally RbA for EoMT) and evaluation metrics (AUPRC and FPR@TPR95).
 - **`model_builder.py`**: Helper module to load ERFNet and EoMT checkpoints and configurations.
 - **`ood_metrics.py`**: Contains the logic to compute standard OOD metrics (AUPRC, FPR@TPR95) from prediction scores and ground truth masks.
@@ -50,6 +51,19 @@ python -m anomaly_evaluation.evalAnomaly \
   --weights /path/to/eomt_checkpoint.bin \
   --config /path/to/config.yaml
 ```
+
+### Comparing Models
+
+To generate a qualitative side-by-side visual comparison of the anomaly maps produced by all studied models, you can use the `compare_models.py` script. The script generates a single combined overview and individual paper-ready images.
+
+```bash
+python -m anomaly_evaluation.compare_models \
+  --input '/path/to/dataset/images/*.png' \
+  --method msp \
+  --eomt_ft_weights /path/to/finetuned/best.ckpt
+```
+
+By default, the script evaluates the `msp` method and looks for the standard checkpoints in the `eomt/weights/` and `erfnet/trained_models/` directories. Models without available weights are automatically skipped.
 
 ### Advanced Options
 

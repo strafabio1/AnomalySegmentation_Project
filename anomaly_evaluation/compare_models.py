@@ -39,7 +39,6 @@ rules / models live on different numerical scales.
 """
 
 import os
-import glob
 from argparse import ArgumentParser
 
 import numpy as np
@@ -53,18 +52,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
-
-# Make the repository root importable regardless of the working directory or how
-# the script is launched (works with `python -m anomaly_evaluation.compare_models`
-# and with `python anomaly_evaluation/compare_models.py`). Does NOT rely on the
-# caller's cwd -- useful on Colab, where Google Drive shortcut paths often keep
-# the repo root off sys.path and break the "from anomaly_evaluation...." imports.
 import sys
-_HERE = os.path.dirname(os.path.abspath(__file__))   # .../anomaly_evaluation
-_REPO_ROOT = os.path.dirname(_HERE)                   # repository root
-for _p in (_REPO_ROOT, _HERE):                        # both forms resolvable
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
 
 from anomaly_evaluation.model_builder import load_erfnet, load_eomt
 from anomaly_evaluation.post_hoc import (
@@ -164,7 +152,6 @@ def anomaly_map_eomt(model, image_path, method, temperature, eval_size, device):
         else:
             raise ValueError(method)
 
-        # upscale to eval_size exactly as in evalAnomaly.py
         score = score.unsqueeze(0)
         score = F.interpolate(score, size=eval_size, mode="bilinear", align_corners=False)
     return score.squeeze().detach().cpu().numpy()
@@ -207,7 +194,6 @@ def _draw_row(fig, axes_row, img_path, maps, model_names, cmap, overlay, alpha, 
             ax.text(0.5, 0.5, "n/a", ha="center", va="center")
             ax.axis("off")
             continue
-        # resize the (per-map min-max normalised) score to the image resolution
         amap_img = np.array(
             Image.fromarray((normalize01(amap) * 255).astype(np.uint8)).resize((W, H), Image.BILINEAR)
         ) / 255.0
@@ -218,8 +204,6 @@ def _draw_row(fig, axes_row, img_path, maps, model_names, cmap, overlay, alpha, 
             ax.imshow(amap_img, cmap=cmap, vmin=0.0, vmax=1.0)
         ax.axis("off")
 
-    # one colorbar legend per row (same colormap for every panel; relative scale,
-    # since each map is min-max normalised independently)
     sm = ScalarMappable(norm=Normalize(vmin=0.0, vmax=1.0), cmap=cmap)
     sm.set_array([])
     cbar = fig.colorbar(sm, ax=list(axes_row), fraction=0.020, pad=0.012)
@@ -264,13 +248,11 @@ def build_figure(image_paths, maps_per_image, model_names, method, out_dir, base
     """
     os.makedirs(out_dir, exist_ok=True)
 
-    # 1) combined overview, saved INSIDE the folder, named after method (+dataset)
     title = f"Anomaly maps - post-hoc method: {method}" + (f" - {dataset}" if dataset else "")
     summary_path = os.path.join(out_dir, base_name + ".png")
     render_rows(image_paths, maps_per_image, model_names, method, summary_path,
                 cmap=cmap, overlay=overlay, alpha=alpha, suptitle=title, dpi=dpi)
 
-    # 2) one paper-ready PNG per input image (single row + its colorbar legend)
     for i, img_path in enumerate(image_paths):
         base = os.path.splitext(os.path.basename(img_path))[0]
         row_out = os.path.join(out_dir, f"row{i:02d}_{base}_{method}.png")
@@ -287,9 +269,9 @@ def main():
     parser = ArgumentParser(description="Compare anomaly maps of ERFNet, EoMT and EoMT fine-tuned with the same post-hoc method.")
     parser.add_argument("--input", required=True, nargs="+",
                         help="Image path(s) or a glob, e.g. 'dataset/images/*.png'.")
-    parser.add_argument("--method", default="maxlogit",
+    parser.add_argument("--method", default="msp",
                         choices=["maxlogit", "msp", "maxentropy"],
-                        help="Post-hoc scoring rule applied to every model (default: maxlogit).")
+                        help="Post-hoc scoring rule applied to every model (default: msp).")
     parser.add_argument("--temperature", type=float, default=1.0,
                         help="Temperature for MSP / MaxEntropy (ignored by MaxLogit).")
 
@@ -325,23 +307,17 @@ def main():
     base_name = f"comparison_{args.method}" + (f"_{dataset}" if dataset else "")
     out_dir = args.out_dir or base_name
 
-    # resolve input images (supports explicit paths and globs)
-    image_paths = []
-    for pat in args.input:
-        matched = sorted(glob.glob(os.path.expanduser(pat)))
-        image_paths.extend(matched if matched else [pat])
-    image_paths = [p for p in image_paths if os.path.isfile(p)][: args.max_images]
+    image_paths = [p for p in args.input if os.path.isfile(p)][: args.max_images]
     if not image_paths:
         print("Error: no valid input images found.")
-        return
+        sys.exit(1)
 
     specs = build_model_specs(args)
     if not specs:
         print("Error: no model could be loaded (check weights/config paths).")
-        return
+        sys.exit(1)
     model_names = [s["name"] for s in specs]
 
-    # load each model once, score all images, then free it
     maps_per_image = [dict() for _ in image_paths]
     for spec in specs:
         print(f"\nLoading {spec['name']} ({spec['type']}) from {spec['weights']} ...")
@@ -355,7 +331,7 @@ def main():
             try:
                 amap = compute_map(spec, model, img_path, args.method, args.temperature, device)
                 maps_per_image[i][spec["name"]] = amap
-            except Exception as e:  # keep going even if one image/model fails
+            except Exception as e:
                 print(f"[warn] {spec['name']} failed on {img_path}: {e}")
 
         del model
