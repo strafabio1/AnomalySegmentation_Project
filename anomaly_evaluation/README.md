@@ -36,8 +36,8 @@ To evaluate the ERFNet model, provide the path to the images and the checkpoint 
 ```bash
 python -m anomaly_evaluation.evalAnomaly \
   --model_type erfnet \
-  --input '/path/to/dataset/images/*.png' \
-  --weights /path/to/erfnet_pretrained.pth
+  --input './path/to/dataset/images/*.png' \
+  --weights './path/to/erfnet_pretrained.pth'
 ```
 
 ### Evaluating EoMT
@@ -47,9 +47,9 @@ To evaluate the EoMT model, you must also provide the corresponding configuratio
 ```bash
 python -m anomaly_evaluation.evalAnomaly \
   --model_type eomt \
-  --input '/path/to/dataset/images/*.png' \
+  --input './path/to/dataset/images/*.png' \
   --weights /path/to/eomt_checkpoint.bin \
-  --config /path/to/config.yaml
+  --config './path/to/config.yaml'
 ```
 
 ### Comparing Models
@@ -72,8 +72,16 @@ By default, the script evaluates the `msp` method and looks for the standard che
   python -m anomaly_evaluation.evalAnomaly \
     --model_type erfnet \
     --input '/path/to/dataset/images/*.png' \
-    --weights /path/to/erfnet_pretrained.pth \
+    --weights '/path/to/erfnet_pretrained.pth' \
     --temperature 0.5 0.75 1.0 1.5 2.0
+  ```
+
+- **Models visual comparison**: You can assess visually how models perform on a dataset by looking at their output anomaly map:**
+
+  ```bash
+  python -m anomaly_evaluation.compare_models \
+  --input "/path/to/dataset/images/*.png" \
+  --method maxentropy
   ```
 
 ## Notes
