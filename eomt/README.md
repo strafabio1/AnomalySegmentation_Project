@@ -67,6 +67,7 @@ python -m eomt.main fit \
 ✅ Make sure the total batch size is `devices × batch_size × accumulate_grad_batches = 16`.
 
 **Finetuning on Cityscapes**
+
 To fine-tune a pre-trained COCO EoMT model on Cityscapes, you can control how many blocks of the backbone to unfreeze.
 
 *1. Finetune ONLY the Classification Head (0 blocks unfrozen):*
@@ -101,7 +102,8 @@ python -m eomt.main fit \
 ### Evaluating
 
 **Evaluating mIoU on Cityscapes**
-You can use the custom `eval_mIou.py` script to evaluate the Mean Intersection over Union (mIoU) on the Cityscapes validation set. The script intelligently handles mapping if you pass the COCO pre-trained model.
+
+You can use the `eval_mIou.py` script to evaluate the Mean Intersection over Union (mIoU) on the Cityscapes validation set. The script intelligently handles mapping if you pass the COCO pre-trained model.
 
 ```bash
 python -m eomt.eval_mIou \
