@@ -1,43 +1,3 @@
-"""
-compare_models.py
------------------
-Qualitative side-by-side comparison of the per-pixel anomaly maps produced by the
-models studied in the anomaly-segmentation part of the project, all scored with
-the SAME post-hoc method:
-
-    * ERFNet              (pixel-based baseline)
-    * EoMT (Cityscapes)   (mask-based; pre-trained directly on Cityscapes)
-    * EoMT (COCO)         (mask-based; COCO pre-trained, zero-shot via class mapping)
-    * EoMT fine-tuned     (COCO model fine-tuned on Cityscapes, "Unfreeze 3")
-
-For each input image the script runs every available model, converts its output
-into a dense anomaly map with the chosen post-hoc scoring rule, and saves a single
-figure with one row per image:
-[ input | ERFNet | EoMT (Cityscapes) | EoMT (COCO) | EoMT fine-tuned ].
-Any model whose weights/config are missing is skipped automatically (e.g. the
-fine-tuned checkpoint if its path is not provided), so the figure simply drops
-that column.
-
-The default post-hoc method is MaxLogit, which is the most performant rule on
-average across the models in our evaluation (highest mean AuPRC and lowest mean
-FPR95); it can be changed with --method.
-
-Loading, preprocessing and scoring are kept identical to
-`anomaly_evaluation/evalAnomaly.py`, so the maps shown here are consistent with
-the numbers reported in the paper.
-
-IMPORTANT: run from the repository root, e.g.
-
-    python -m anomaly_evaluation.compare_models \
-        --input "Validation_Dataset/RoadAnomaly21/images/*.png" \
-        --method maxlogit \
-        --eomt_ft_weights eomt/eomt/finetune_unfreeze3_batch16_final/checkpoints/best.ckpt
-
-For every score used here, a HIGHER value means MORE anomalous. Each map is
-min-max normalised independently for visualisation, since the different scoring
-rules / models live on different numerical scales.
-"""
-
 import os
 from argparse import ArgumentParser
 
@@ -61,11 +21,7 @@ from anomaly_evaluation.post_hoc import (
 )
 
 
-# --------------------------------------------------------------------------- #
-#  Model registry                                                             #
-# --------------------------------------------------------------------------- #
 def build_model_specs(args):
-    """Return the ordered list of model specs that actually have weights on disk."""
     specs = [
         {
             "name": "ERFNet",
@@ -106,13 +62,9 @@ def build_model_specs(args):
 
 
 def eomt_eval_size(weights_path):
-    """Replicates evalAnomaly.py: Cityscapes-trained EoMT runs at 1024, otherwise 640."""
     return (1024, 1024) if "cityscapes" in weights_path.lower() else (640, 640)
 
 
-# --------------------------------------------------------------------------- #
-#  Per-model anomaly map for a single image                                   #
-# --------------------------------------------------------------------------- #
 def anomaly_map_erfnet(model, image_path, method, temperature, device):
     eval_size = (512, 1024)
     transform = Compose([Resize(eval_size, Image.BILINEAR), ToTensor()])
@@ -164,9 +116,6 @@ def compute_map(spec, model, image_path, method, temperature, device):
                             eomt_eval_size(spec["weights"]), device)
 
 
-# --------------------------------------------------------------------------- #
-#  Visualisation                                                              #
-# --------------------------------------------------------------------------- #
 def normalize01(m):
     m = m.astype(np.float32)
     lo, hi = np.nanmin(m), np.nanmax(m)
@@ -176,7 +125,6 @@ def normalize01(m):
 
 
 def _draw_row(fig, axes_row, img_path, maps, model_names, cmap, overlay, alpha, show_titles):
-    """Draw one [input | model maps...] row and attach a colorbar legend on its right."""
     rgb = np.array(Image.open(img_path).convert("RGB"))
     H, W = rgb.shape[:2]
 
@@ -214,7 +162,6 @@ def _draw_row(fig, axes_row, img_path, maps, model_names, cmap, overlay, alpha, 
 
 def render_rows(image_paths, maps_per_image, model_names, method, out_path,
                 cmap="inferno", overlay=False, alpha=0.5, suptitle=None, dpi=200):
-    """Render the given image rows into a single figure (one colorbar per row)."""
     n_rows = len(image_paths)
     n_cols = 1 + len(model_names)
     fig, axes = plt.subplots(n_rows, n_cols,
@@ -231,8 +178,6 @@ def render_rows(image_paths, maps_per_image, model_names, method, out_path,
 
 
 def dataset_name_from_input(pattern):
-    """Infer the dataset name from an input path like '.../<dataset>/images/*.png'
-    (same convention used by evalAnomaly.py)."""
     p = str(pattern).rstrip("/")
     name = os.path.basename(os.path.dirname(os.path.dirname(p)))
     if not name or name in (".", "..") or any(ch in name for ch in "*?[]"):
@@ -242,10 +187,6 @@ def dataset_name_from_input(pattern):
 
 def build_figure(image_paths, maps_per_image, model_names, method, out_dir, base_name,
                  dataset="", cmap="inferno", overlay=False, alpha=0.5, dpi=200):
-    """Write everything into a single folder `out_dir`:
-       * the combined overview  `out_dir/<base_name>.png`  (colorbar on every row)
-       * one paper-ready PNG per input image (single row + colorbar legend).
-    """
     os.makedirs(out_dir, exist_ok=True)
 
     title = f"Anomaly maps - post-hoc method: {method}" + (f" - {dataset}" if dataset else "")
@@ -262,9 +203,7 @@ def build_figure(image_paths, maps_per_image, model_names, method, out_dir, base
           f"{len(image_paths)} per-row PNG)")
 
 
-# --------------------------------------------------------------------------- #
-#  Main                                                                       #
-# --------------------------------------------------------------------------- #
+
 def main():
     parser = ArgumentParser(description="Compare anomaly maps of ERFNet, EoMT and EoMT fine-tuned with the same post-hoc method.")
     parser.add_argument("--input", required=True, nargs="+",
@@ -275,15 +214,11 @@ def main():
     parser.add_argument("--temperature", type=float, default=1.0,
                         help="Temperature for MSP / MaxEntropy (ignored by MaxLogit).")
 
-    # ERFNet
     parser.add_argument("--erfnet_weights", default="erfnet/trained_models/erfnet_pretrained.pth")
-    # EoMT pre-trained on Cityscapes (native in-domain model)
     parser.add_argument("--eomt_cityscapes_weights", default="eomt/weights/eomt_cityscapes.bin")
     parser.add_argument("--eomt_cityscapes_config", default="eomt/configs/dinov2/cityscapes/semantic/eomt_base_640.yaml")
-    # EoMT pre-trained on COCO (zero-shot via class mapping)
     parser.add_argument("--eomt_coco_weights", default="eomt/weights/eomt_coco.bin")
     parser.add_argument("--eomt_coco_config", default="eomt/configs/dinov2/coco/panoptic/eomt_base_640_2x.yaml")
-    # EoMT fine-tuned on Cityscapes (Unfreeze 3). Not shipped in the repo; pass its path.
     parser.add_argument("--eomt_ft_weights", default="eomt/eomt/finetune_unfreeze3_batch16_final/checkpoints/best.ckpt")
     parser.add_argument("--eomt_ft_config", default="eomt/configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml")
 
@@ -302,7 +237,6 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # dataset name -> appended to both the output folder and the summary image
     dataset = args.dataset if args.dataset is not None else dataset_name_from_input(args.input[0])
     base_name = f"comparison_{args.method}" + (f"_{dataset}" if dataset else "")
     out_dir = args.out_dir or base_name
