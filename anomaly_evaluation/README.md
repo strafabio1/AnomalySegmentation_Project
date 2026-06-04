@@ -1,4 +1,4 @@
-# Anomaly Evaluation Suite
+# Anomaly Evaluation
 
 This directory contains the unified pipeline for evaluating anomaly segmentation and Out-Of-Distribution (OOD) detection performance. It is designed to work seamlessly with both the **ERFNet** baseline and the **EoMT** model.
 
@@ -13,7 +13,7 @@ pip install -r requirements.txt
 ## Directory Structure
 
 - **`compare_models.py`**: Script to qualitatively compare the anomaly maps produced by ERFNet, EoMT (Cityscapes), EoMT (COCO), and the fine-tuned EoMT using a single post-hoc method.
-- **`evalAnomaly.py`**: The main evaluation script that computes anomaly scores (MSP, MaxLogit, MaxEntropy, and optionally RbA for EoMT) and evaluation metrics (AUPRC and FPR@TPR95).
+- **`evalAnomaly.py`**: The main evaluation script that computes anomaly scores (MSP, MaxLogit, MaxEntropy, and RbA for EoMT) and evaluation metrics (AUPRC and FPR@TPR95).
 - **`model_builder.py`**: Helper module to load ERFNet and EoMT checkpoints and configurations.
 - **`ood_metrics.py`**: Contains the logic to compute standard OOD metrics (AUPRC, FPR@TPR95) from prediction scores and ground truth masks.
 - **`post_hoc.py`**: Implementation of several post-hoc scoring functions (MSP, MaxLogit, MaxEntropy, RbA) adapted for both architectures.
@@ -40,6 +40,9 @@ python -m anomaly_evaluation.evalAnomaly \
   --weights './path/to/erfnet_pretrained.pth'
 ```
 
+🔧 Replace `./path/to/dataset/images/*.png` with the actual path to your dataset images.
+🔧 Replace `./path/to/erfnet_pretrained.pth` with the path to your ERFNet checkpoint.
+
 ### Evaluating EoMT
 
 To evaluate the EoMT model, you must also provide the corresponding configuration file:
@@ -52,6 +55,10 @@ python -m anomaly_evaluation.evalAnomaly \
   --config './path/to/config.yaml'
 ```
 
+🔧 Replace `./path/to/dataset/images/*.png` with the actual path to your dataset images.
+🔧 Replace `/path/to/eomt_checkpoint.bin` with the path to your EoMT checkpoint.
+🔧 Replace `./path/to/config.yaml` with the path to your configuration file.
+
 ### Comparing Models
 
 To generate a qualitative side-by-side visual comparison of the anomaly maps produced by all studied models, you can use the `compare_models.py` script. The script generates a single combined overview and individual paper-ready images.
@@ -60,31 +67,30 @@ To generate a qualitative side-by-side visual comparison of the anomaly maps pro
 python -m anomaly_evaluation.compare_models \
   --input '/path/to/dataset/images/*.png' \
   --method msp \
-  --eomt_ft_weights /path/to/finetuned/best.ckpt
+  --erfnet_weights '/path/to/erfnet_pretrained.pth' \
+  --eomt_cityscapes_weights '/path/to/eomt_cityscapes.bin' \
+  --eomt_cityscapes_config 'eomt/configs/dinov2/cityscapes/semantic/eomt_base_640.yaml' \
+  --eomt_coco_weights '/path/to/eomt_coco.bin' \
+  --eomt_coco_config 'eomt/configs/dinov2/coco/panoptic/eomt_base_640_2x.yaml' \
+  --eomt_ft_weights '/path/to/finetuned/checkpoint.ckpt' \
+  --eomt_ft_config 'eomt/configs/dinov2/cityscapes/semantic/eomt_finetune_base_640.yaml'
 ```
 
-By default, the script evaluates the `msp` method and looks for the standard checkpoints in the `eomt/weights/` and `erfnet/trained_models/` directories. Models without available weights are automatically skipped.
+🔧 Replace `/path/to/dataset/images/*.png` with the actual path to your dataset images.
+🔧 Replace the `/path/to/...` placeholder paths with the actual paths to your trained weights and configuration files.
 
-### Advanced Options
+By default, the script evaluates the `msp` method and looks for the standard checkpoints in the directories. Models without available weights are automatically skipped.
 
-- **Temperature Scaling**: You can evaluate the effect of temperature scaling on the calibration of the anomaly scores by providing one or more temperature values using the `--temperature` argument. **Note that if multiple temperatures are provided, the script computes the results efficiently by reusing the same network logits, avoiding redundant forward passes:**
+### Temperature Scaling
+
+You can evaluate the effect of temperature scaling on the calibration of the anomaly scores by providing one or more temperature values using the `--temperature` argument. **Note that if multiple temperatures are provided, the script computes the results efficiently by reusing the same network logits, avoiding redundant forward passes:**
   ```bash
   python -m anomaly_evaluation.evalAnomaly \
     --model_type erfnet \
     --input '/path/to/dataset/images/*.png' \
-    --weights '/path/to/erfnet_pretrained.pth' \
+    --weights '/path/to/model_weights.pth' \
     --temperature 0.5 0.75 1.0 1.5 2.0
   ```
 
-- **Models visual comparison**: You can assess visually how models perform on a dataset by looking at their output anomaly map:**
+  🔧 Replace `/path/to/dataset/images/*.png` and `/path/to/model_weights.pth` with your actual paths.
 
-  ```bash
-  python -m anomaly_evaluation.compare_models \
-  --input "/path/to/dataset/images/*.png" \
-  --method maxentropy
-  ```
-
-## Notes
-
-- The script automatically handles target image sizes: ERFNet uses `(512, 1024)`, while EoMT dynamically adjusts depending on whether it was trained on Cityscapes `(1024, 1024)` or COCO `(640, 640)`.
-- The evaluation requires anomalous test images and ground truth masks formatted appropriately for the datasets specified.
