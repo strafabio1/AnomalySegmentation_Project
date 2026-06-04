@@ -31,4 +31,4 @@ To run the scripts, you must install the required dependencies. Execute the foll
 pip install -r requirements.txt
 ```
 
-*Note: The scripts are configured to automatically resolve internal imports without needing to install the project as a package. However, **all commands must be executed from the root directory of the repository**.*
+*Note: **all commands must be executed from the root directory of the repository**.*
