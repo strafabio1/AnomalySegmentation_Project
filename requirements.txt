@@ -11,4 +11,4 @@ ipykernel==6.17.1
 fvcore==0.1.5.post20221221
 torchmetrics==1.7.1
 pycocotools==2.0.8
-lightning==2.6.1
+lightning==2.6.1 
