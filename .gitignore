@@ -14,3 +14,7 @@ eomt/mapping.py
 __pycache__/
 eomt/Anomaly_validation.ipynb
 *.png
+*.pth
+*.pt
+*.ckpt
+*.bin
