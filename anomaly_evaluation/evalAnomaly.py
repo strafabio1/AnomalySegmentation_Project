@@ -49,7 +49,7 @@ def load_and_prepare_mask(pathGT, target_transform):
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("--input", required=True, nargs="+")
+    parser.add_argument("--input", required=True)
     parser.add_argument('--model_type', required=True, choices=['erfnet', 'eomt'])
     parser.add_argument('--weights', required=True)
     parser.add_argument('--config', default="")
@@ -98,7 +98,7 @@ def main():
 
     print("\nStarting evaluation loop...")
     
-    for path in glob.glob(os.path.expanduser(str(args.input[0]))):
+    for path in glob.glob(os.path.expanduser(str(args.input))):
         
         pathGT = path.replace("images", "labels_masks")                
         
@@ -159,7 +159,7 @@ def main():
         return
 
     ood_gts = np.array(ood_gts_list)
-    dataset_name = os.path.basename(os.path.dirname(os.path.dirname(str(args.input[0]))))
+    dataset_name = os.path.basename(os.path.dirname(os.path.dirname(str(args.input))))
     
     invariant_results = {}
     for method_name, scores_list in invariant_scores_dict.items():
