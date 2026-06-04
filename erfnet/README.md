@@ -1,8 +1,6 @@
-# ERFNet Baseline
+# ERFNet
 
 This directory contains the codebase, evaluation scripts, and utilities for the **ERFNet** (Efficient Residual Factorized Network) architecture. ERFNet serves as the baseline semantic segmentation model for the Anomaly Segmentation Project.
-
-This module has been cleanly separated from the modern `eomt` framework and from the anomaly evaluation suite in order to keep the project modular, easier to maintain, and easier to compare against other models.
 
 ## Requirements
 
@@ -41,6 +39,8 @@ To calculate the mean Intersection over Union (mIoU) and per-class IoU for the E
 ```bash
 python -m erfnet.eval.eval_iou --datadir /path/to/cityscapes/ --subset val
 ```
+
+🔧 Replace `/path/to/cityscapes/` with the actual path to your Cityscapes dataset.
 
 ## Usage Note
 
